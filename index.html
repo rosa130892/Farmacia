@@ -1,0 +1,687 @@
+<!DOCTYPE html-->
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css" />
+<link rel="stylesheet" href="css/jquery-ui.css" />
+<script src="js/jquery.min.js"></script>
+<script src="js/jquery-ui.js"></script>
+<script src="js/jquery.mobile-1.4.5.min.js"></script>
+<title>Aplicación Móvil</title>
+<script type="text/javascript">
+    
+$(document).ready(function inicio(){
+// Todos las acciones agregar, buscar, modificar y eliminar de la primer tabla
+// Es esta parte se insertar los datos a la base de datos
+  var btnGuardar=$("#guardarMedicamento");
+  btnGuardar.click(function guardarMedicamento(){
+  var nom=$("#nombre").val();
+  var pre=parseInt($("#precio").val());
+  var mar=$("#marca").val();
+  var cod=$("#codigo_barras").val();
+  if(nom=="" || pre=="" || mar=="" || cod=="" ){
+	alert("Ingresa información en todos los campos");
+      }else{
+    $.ajax({
+    type:"POST",
+    url:"http://rosaisc.260mb.net/insertarMedicamento.php",
+    data:"nombre= "+nom+" &precio= "+ pre +" &marca= "+ mar +" &codigo_barras= "+ cod ,
+    success: registro
+    });}
+
+   function registro(datos){
+       var resp=$("#respuesta");
+       resp.html(datos);
+    } 
+    }) ;
+  
+
+  function dibujarTablaMedicamento(respuesta, respDatos){
+  respuesta.html("");
+    respuesta.append('<table id="tab" border="2">');
+    var tabla=$("#tab");
+    tabla.html("<tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Marca</th><th>Codigo de barras</th></tr>");
+    for(var i in respDatos){
+      tabla.append("<tr><td>"+respDatos[i].id+"</td>"
+      +"<td>"+respDatos[i].nombre+"</td>"
+      +"<td>"+respDatos[i].precio+"</td>"
+      +"<td>"+respDatos[i].marca+"</td>"
+      +"<td>"+respDatos[i].codigo_barras+"</td></tr>");
+    }
+    tabla.append("</table>");
+  }
+  
+  
+// Es esta parte se buscan los datos a la base de datos
+ var consultar2=$("#btnconsultarMedicamento");
+  consultar2.click(function MedicamentoBuscar(){
+  var valConsulta=$("#valConsulta").val();
+    $.ajax({
+      type:"POST",
+      url:"http://rosaisc.260mb.net/buscarMedicamento.php",
+      data:"Id="+valConsulta,
+      success: ConsultaMedicamentos
+    });
+    
+    function ConsultaMedicamentos(datos){
+    var respDatos2=$.parseJSON(datos);   
+    var respuesta2=$("#resbuscarMedicamento");
+    dibujarTablaMedicamento(respuesta2, respDatos2);
+    }
+  });
+  
+  
+var btnConsAct=$("#btnConsActMedicamento");
+  btnConsAct.click(function CargarDatosMedicamentos(){  
+    $.ajax({
+    type:"POST",
+    url:"http://rosaisc.260mb.net/consultarMedicamento.php",
+    data:"",
+    success: CargarDatosMedicamentos
+    });
+    
+    function CargarDatosMedicamentos(datos){   
+      var respCarga=$.parseJSON(datos);       
+      var respConAct=$("#respConActMedicamento");      
+      dibujarTablaMedicamento(respConAct,respCarga);
+    }
+  });
+  
+
+  var btnCarDatos=$("#btnCarDatosMedicamento");
+  btnCarDatos.click(function CargarInformacionMedicamentos(){
+  var Id=parseInt($("#idAcualizar").val());
+    $.ajax({
+    type:"POST",
+    url:"http://rosaisc.260mb.net/buscarMedicamento.php",
+    data:"Id="+Id,
+    success: cargarDatosAct
+    });
+    
+    //Es esta parte se cargan los datos que se van a eliminar
+     function cargarDatosAct(datos){
+      var consDatAct=$.parseJSON(datos);
+      if(consDatAct==""){
+       alert("Ingresa el ID a Modificar o el ID no Existe en la Base de Datos");    
+      }else{
+      var respCargDatos=$("#respCargDatosMedicamento");//Div del resultado para dibujar controles
+      respCargDatos.html("<label>ID:</label><input type='text' id='Id' disabled='yes'>");
+      respCargDatos.append("<label>Nombre:</label><input type='text' id='nom'>");
+      respCargDatos.append("<label>Precio:</label><input type='text' id='pre'>");
+      respCargDatos.append("<label>Marca:</label><input type='text' id='mar'>");
+         respCargDatos.append("<label>Código de barras:</label><input type='text' id='cod'>");
+      var Id=$("#Id");
+      var nom=$("#nom");
+      var pre=$("#pre");
+      var mar=$("#mar");
+       var cod=$("#cod");
+      for(var i in consDatAct){
+	Id.val(consDatAct[i].id);
+	nom.val(consDatAct[i].nombre);
+	pre.val(consDatAct[i].precio);
+	mar.val(consDatAct[i].marca);
+        cod.val(consDatAct[i].codigo_barras);
+      }
+    }}
+  });
+  
+   // Boton consulta para actualizar datos de la tabla
+    var btnGuarDatos=$("#btnGuarDatosMedicamento");
+      btnGuarDatos.click(function actualizar(){
+      var id=parseInt($("#Id").val());
+      var nombre=$("#nom").val();
+      var precio=$("#pre").val();
+      var marca=$("#mar").val();
+      var codigo_barras=$("#cod").val();
+
+      if(nombre=="" || marca=="" || precio=="" || codigo_barras=="" ){
+	alert("Ingresa información en todos los campos");
+      }else{
+	$.ajax({
+	  type:"POST",
+	  url:"http://rosaisc.260mb.net/actualizarMedicamento.php",
+	  data:" id= "+id+" &nombre="+nombre+" &precio= "+precio+" &marca= "+marca+" &codigo_barras= "+codigo_barras,
+	  success: actualizacionMedicamentos
+	});
+		
+      }   
+      
+   function actualizacionMedicamentos(datos){
+       var resp=$("#respuestaMedicamentoModif");
+       resp.html(datos);
+    } 
+    }) ; 
+   
+    var btnConsEliminar=$("#btnConsEliminarMedicamento"); // Boton consunta para eliminar
+   btnConsEliminar.click(function EliminarRegistroMedicamento(){
+    $.ajax({
+    type:"POST",
+    url:"http://rosaisc.260mb.net/consultarMedicamento.php",
+    data:"",
+    success: CDEliminarMedicamento
+    });
+    
+    function CDEliminarMedicamento(datos){   
+      var respCarga=$.parseJSON(datos);       
+      var respConAct=$("#respConElimMedicamento");      
+      dibujarTablaMedicamento(respConAct,respCarga);
+    }
+   });
+   
+   
+    var btnEliminar=$("#btnEliminarMedicamento");
+   btnEliminar.click(function eliminarMedicamento(){
+    var IdEliminar=parseInt($("#IdEliminarMedicamento").val());
+      $.ajax({
+    type:"POST",
+    url:"http://rosaisc.260mb.net/eliminarMedicamento.php",
+    data:"Id="+IdEliminar,
+    success: Eliminacion
+    });
+    
+    function Eliminacion(datos){   
+      alert(datos);
+    }  
+   });
+ 
+/*
+    $('#principal').click(function() {
+            // Recargo la página
+            location.reload();
+        });
+  
+      $('#principalRegistros').click(function() {
+            // Recargo la página
+            location.reload();
+        });
+        
+        $('#principalBusquedas').click(function() {
+            // Recargo la página
+            location.reload();
+        });
+        
+         $('#principalActualizacion').click(function() {
+            // Recargo la página
+            location.reload();
+        });
+        
+           $('#principalEliminacion').click(function() {
+            // Recargo la página
+            location.reload();
+        });*/
+        
+            //$('#btnEliminarMedicamento').click(function() {
+            // Recargo la página
+          //  location.reload();
+        //});
+           
+        //  $('#btnEliminarEmpleado').click(function() {
+            // Recargo la página
+          //  location.reload();
+        //});
+        
+  var btnGuardar2=$("#guardarEmpleado");
+  btnGuardar2.click(function guardarEmpleado(){
+  var nom=$("#nom").val();
+  var app=$("#apellidop").val();
+  var apm=$("#apellidom").val();
+  var dir=$("#direc").val();
+  var mun=$("#muni").val();
+  if(nom=="" || app=="" || apm=="" || dir=="" || mun=="" ){
+	alert("Ingresa información en todos los campos");
+      }else{
+    $.ajax({
+    type:"POST",
+    url:"http://rosaisc.260mb.net/insertarEmpleado.php",
+    data:"nom= "+nom+" &apellidop= "+ app +" &apellidom= "+ apm +" &direc= "+ dir +" &muni= "+ mun ,
+    success: registro2
+    });}
+    
+    function registro2(datos){
+       var resp=$("#respuesta2");
+       resp.html(datos);
+    } 
+    }) ;
+        
+  function dibujarTablaEmpleado(respuesta, respDatos){
+  respuesta.html("");
+    respuesta.append('<table id="tab" border="2">');
+    var tabla=$("#tab");
+    tabla.html("<tr><th>ID</th><th>Nombre</th><th>Apellido Paterno</th><th>Apellido Materno</th><th>Dirección</th><th>Municipio</th></tr>");
+    for(var i in respDatos){
+      tabla.append("<tr><td>"+respDatos[i].id+"</td>"
+      +"<td>"+respDatos[i].nombre+"</td>"
+      +"<td>"+respDatos[i].appat+"</td>"
+      +"<td>"+respDatos[i].apmat+"</td>"
+      +"<td>"+respDatos[i].direccion+"</td>"
+      +"<td>"+respDatos[i].municipio+"</td></tr>");
+    }
+    tabla.append("</table>");
+  }
+  
+  
+// Es esta parte se buscan los datos a la base de datos
+ var consultarEmp=$("#btnconsultarEmpleado");
+  consultarEmp.click(function MedicamentoBuscar(){
+  var valConsultaEmp=$("#valConsulta2").val();
+    $.ajax({
+      type:"POST",
+      url:"http://rosaisc.260mb.net/buscarEmpleado.php",
+      data:"Id="+valConsultaEmp,
+      success: ConsultaEmpleado
+    });
+    
+    function ConsultaEmpleado(datos2){
+    var respDatosEmp=$.parseJSON(datos2);   
+    var respuestaEmp=$("#resbuscarEmpleado");
+    dibujarTablaEmpleado(respuestaEmp, respDatosEmp);
+    }
+  });
+  
+  
+  var btnConsAct2=$("#btnConsActEmpleado");
+  btnConsAct2.click(function CargarDatosEmpleados(){  
+    $.ajax({
+    type:"POST",
+    url:"http://rosaisc.260mb.net/consultarEmpleado.php",
+    data:"",
+    success: CargarDatosEmpleado
+    });
+    
+    function CargarDatosEmpleado(datos){   
+      var respCargaEmp=$.parseJSON(datos);       
+      var respConActEmp=$("#respConActEmpleado");      
+      dibujarTablaEmpleado(respConActEmp,respCargaEmp);
+    }
+  });
+  
+
+  var btnCarDatos2=$("#btnCarDatosEmpleado");
+  btnCarDatos2.click(function CargarInformacionEmpelado(){
+  var Id=parseInt($("#idAcualizarEmp").val());
+    $.ajax({
+    type:"POST",
+    url:"http://rosaisc.260mb.net/buscarEmpleado.php",
+    data:"Id="+Id,
+    success: cargarDatosAct2
+    });
+    
+    
+    //Es esta parte se cargan los datos que se van a eliminar
+     function cargarDatosAct2(datos2){
+      var consDatAct=$.parseJSON(datos2);
+      if(consDatAct==""){
+       alert("Ingresa el ID a Modificar o el ID no Existe en la Base de Datos");    
+      }else{
+      var respCargDatos2=$("#respCargDatosEmpleado");//Div del resultado para dibujar controles
+      respCargDatos2.html("<label>ID:</label><input type='text' id='Id' disabled='yes'>");
+      respCargDatos2.append("<label>Nombre:</label><input type='text' id='nomb'>");
+      respCargDatos2.append("<label>Apellido Paterno:</label><input type='text' id='app'>");
+      respCargDatos2.append("<label>Apellido Materno:</label><input type='text' id='apm'>");
+         respCargDatos2.append("<label>Dirección:</label><input type='text' id='dir'>");
+         respCargDatos2.append("<label>Municipio:</label><input type='text' id='mun'>");
+      var Id=$("#Id");
+      var nomb=$("#nomb");
+      var app=$("#app");
+      var apm=$("#apm");
+       var dir=$("#dir");
+       var mun=$("#mun");
+      for(var i in consDatAct){
+	Id.val(consDatAct[i].id);
+	nomb.val(consDatAct[i].nombre);
+	app.val(consDatAct[i].appat);
+	apm.val(consDatAct[i].apmat);
+        dir.val(consDatAct[i].direccion);
+        mun.val(consDatAct[i].municipio);
+      }
+    }}
+  });
+  
+   // Boton consulta para actualizar datos de la tabla
+    var btnGuarDatos=$("#btnGuarDatosEmpleado");
+      btnGuarDatos.click(function actualizar(){
+      var id=parseInt($("#Id").val());
+      var nombre=$("#nomb").val();
+      var appat=$("#app").val();
+      var apmat=$("#apm").val();
+      var direccion=$("#dir").val();
+      var municipio=$("#mun").val();
+
+      if(nombre=="" || appat=="" || apmat=="" || direccion=="" || municipio=="" ){
+	alert("Ingresa información en todos los campos");
+      }else{
+	$.ajax({
+	  type:"POST",
+	  url:"http://rosaisc.260mb.net/actualizarEmpleado.php",
+	  data:" id= "+id+" &nombre="+nombre+" &appat= "+appat+" &apmat= "+apmat+" &direccion= "+direccion+" &municipio= "+municipio,
+	  success: actualizacionEmpleado
+	});
+		
+      }   
+
+  function actualizacionEmpleado(datos){
+       var resp=$("#respuestaEmpleadosModif");
+       resp.html(datos);
+    } 
+    }) ; 
+  
+  var btnConsEliminar=$("#btnConsEliminarEmpleado"); // Boton consunta para eliminar
+   btnConsEliminar.click(function EliminarRegistroMedicamento(){
+    $.ajax({
+    type:"POST",
+    url:"http://rosaisc.260mb.net/consultarEmpleado.php",
+    data:"",
+    success: CDEliminarMedicamento
+    });
+    
+    function CDEliminarMedicamento(datos){   
+      var respCarga=$.parseJSON(datos);       
+      var respConAct=$("#respConElimEmpleado");      
+      dibujarTablaEmpleado(respConAct,respCarga);
+    }
+   });
+   
+   
+    var btnEliminar=$("#btnEliminarEmpleado");
+   btnEliminar.click(function eliminarEmpleado(){
+    var IdEliminar=parseInt($("#IdEliminarEmpleado").val());
+      $.ajax({
+    type:"POST",
+    url:"http://rosaisc.260mb.net/eliminarEmpleado.php",
+    data:"Id="+IdEliminar,
+    success: EliminacionEmpleado
+    });
+    
+    function EliminacionEmpleado(datos2){   
+      alert(datos2);
+    }  
+   });
+ 
+});
+</script>
+<style type="text/css">
+p{
+text-align:center;
+}
+
+</style>
+</head>
+<body onload="inicio()">
+<div data-role="page" id="principal" data-theme="a">
+  <div data-role="header" >
+    <p>Datos Farmacia Flores</p>
+  </div>
+  <div data-role="content">
+    <div>
+      <ul data-role="listview">
+	<li><a href="#principalRegistros" data-role="button" data-transition="slide">Registrar</a></li>
+	<li><a href="#principalBusquedas" data-role="button" data-transition="slide">Buscar</a></li>
+	<li><a href="#principalActualizacion" data-role="button" data-transition="slide">Actualizar</a></li>
+        <li><a href="#principalEliminacion" data-role="button" data-transition="slide">Eliminar</a></li>
+      </ul>
+    </div>
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+  </div>
+</div>
+    
+    
+    <div data-role="page" id="principalRegistros">
+  <div data-role="header" >
+    <p>Realización de Registros</p>
+ <a href="#principal" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <div>
+      <ul data-role="listview">
+	<li><a href="#registroEmpleado" data-role="button" data-transition="slideup">Registrar Empleados</a></li>
+	<li><a href="#registroMedicamento" data-role="button" data-transition="slideup">Registrar Medicamentos</a></li>
+      </ul>
+    </div>
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+  </div>
+</div>
+    
+    
+    
+        <div data-role="page" id="principalBusquedas">
+  <div data-role="header" >
+    <p>Realización de Búsquedas</p>
+ <a href="#principal" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <div>
+      <ul data-role="listview">
+	<li><a href="#buscarEmpleado" data-role="button" data-transition="slidedown">Buscar Empleados</a></li>
+	<li><a href="#buscarMedicamento" data-role="button" data-transition="slidedown">Buscar Medicamentos</a></li>
+      </ul>
+    </div>
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+  </div>
+</div>
+    
+    
+    
+     <div data-role="page" id="principalActualizacion">
+  <div data-role="header" >
+    <p>Realización de Actualizaciones</p>
+ <a href="#principal" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <div>
+      <ul data-role="listview">
+	<li><a href="#actualizarEmpleado" data-role="button" data-transition="fade">Actualizar Empleados</a></li>
+	<li><a href="#actualizarMedicamentos" data-role="button" data-transition="fade">Actualizar Medicamentos</a></li>
+      </ul>
+    </div>
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+  </div>
+</div>
+    
+    
+       <div data-role="page" id="principalEliminacion">
+  <div data-role="header" >
+    <p>Realización de Actualizaciones</p>
+ <a href="#principal" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <div>
+      <ul data-role="listview">
+	<li><a href="#eliminarEmpleado" >Eliminar Empleado</a></li>
+	<li><a href="#eliminarMedicamentos" >Eliminar Medicamento</a></li>
+      </ul>
+    </div>
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+  </div>
+</div>
+    
+    
+    <!-- Insertar datos en una base de datos-->
+<div data-role="page" id="registroMedicamento">
+  <div data-role="header" >
+    <p>Resgistros de medicamentos</p>
+       <a href="#principalRegistros" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <label for="nombre">Nombre:</label>
+    <input type="text" id="nombre">
+    
+    <label for="precio">Precio:</label>
+    <input type="text" id="precio">
+    
+    <label for="marca">Marca:</label>
+    <input type="text" id="marca">
+    
+    <label for="codigo_barras">Código de barras:</label>
+    <input type="text" id="codigo_barras">
+    
+    <input type="button" id="guardarMedicamento" value="Guardar">
+    
+        <div id="respuesta"></div>
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+  </div>
+</div>
+    
+        <!-- Buscar datos en una base de datos-->
+   <div data-role="page" id="buscarMedicamento">
+  <div data-role="header" >
+    <p>Buscar Medicamento</p>
+       <a href="#principalBusquedas" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <label for="valConsulta">Id Medicamento:</label>
+    <input type="text" id="valConsulta" >
+    <input type="button" id="btnconsultarMedicamento" value="Buscar">
+    <div id="resbuscarMedicamento"></div>
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+</div>
+</div>
+
+<div data-role="page" id="actualizarMedicamentos">
+  <div data-role="header" >
+    <p>Actualizar registros de medicamento</p>
+     <a href="#principalActualizacion" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <input type="button" id="btnConsActMedicamento" value="Mostrar todos los medicamentos">
+    <div id="respConActMedicamento"></div>
+    <label for="idAcualizar">ID a actualizar</label>
+    <input type="text" id="idAcualizar" >
+    <input type="button" id="btnCarDatosMedicamento" value="Cargar Datos">
+    <div id="respCargDatosMedicamento"></div>
+    <input type="button" id="btnGuarDatosMedicamento" value="Guardar Datos">
+    
+    <div id="respuestaMedicamentoModif"></div>
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+  </div>
+</div>
+    
+        
+     <div data-role="page" id="eliminarMedicamentos">
+  <div data-role="header" >
+    <p>Eliminar registro de medicamento</p>
+     <a href="#principalEliminacion" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <input type="button" id="btnConsEliminarMedicamento" value="Mostrar todos los registros">
+    <div id="respConElimMedicamento"></div>
+    <label for="IdEliminarMedicamento">ID de medicamentos a eliminar</label>
+    <input type="text" id="IdEliminarMedicamento" >    
+    <input type="button" id="btnEliminarMedicamento" value="Eliminar Datos">
+    
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+  </div>
+</div>    
+        
+        
+        
+        
+ <!-- Insertar datos en una base de datos-->
+<div data-role="page" id="registroEmpleado">
+  <div data-role="header" >
+    <p>Resgistros de empleados</p>
+       <a href="#principalRegistros" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <label for="nom">Nombre:</label>
+    <input type="text" id="nom">
+    
+    <label for="apellidop">Apellido Paterno:</label>
+    <input type="text" id="apellidop">
+    
+    <label for="apellidom">Apellido Materno:</label>
+    <input type="text" id="apellidom">
+    
+    <label for="direc">Dirección:</label>
+    <input type="text" id="direc">
+    
+    <label for="muni">Municipio:</label>
+    <input type="text" id="muni">
+    
+    <input type="button" id="guardarEmpleado" value="Guardar">
+
+     <div id="respuesta2"></div>
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+  </div>
+</div>
+ 
+ 
+ 
+  <!-- Buscar datos en una base de datos-->
+   <div data-role="page" id="buscarEmpleado">
+  <div data-role="header" >
+    <p>Buscar Empleado</p>
+       <a href="#principalBusquedas" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <label for="valConsulta2">Id Empleado:</label>
+    <input type="text" id="valConsulta2" >
+    <input type="button" id="btnconsultarEmpleado" value="Buscar">
+    <div id="resbuscarEmpleado"></div>
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+</div>
+</div>
+ 
+  
+  <div data-role="page" id="actualizarEmpleado">
+  <div data-role="header" >
+    <p>Actualizar registros de empleados</p>
+     <a href="#principalActualizacion" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <input type="button" id="btnConsActEmpleado" value="Mostrar todos los Empleados">
+    <div id="respConActEmpleado"></div>
+    <label for="idAcualizarEmp">ID a actualizar</label>
+    <input type="text" id="idAcualizarEmp" >
+    <input type="button" id="btnCarDatosEmpleado" value="Cargar Datos">
+    <div id="respCargDatosEmpleado"></div>
+    <input type="button" id="btnGuarDatosEmpleado" value="Guardar Datos">
+       
+      <div id="respuestaEmpleadosModif"></div>
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+  </div>
+</div>
+  
+    <div data-role="page" id="eliminarEmpleado">
+  <div data-role="header" >
+    <p>Eliminar registro de Empleado</p>
+     <a href="#principalEliminacion" data-role="button" data-transition="slide" data-add-back-btn="true" data-icon="home">Regresar</a>
+  </div>
+  <div data-role="content">
+    <input type="button" id="btnConsEliminarEmpleado" value="Mostrar todos los registros">
+    <div id="respConElimEmpleado"></div>
+    <label for="IdEliminarEmpleado">ID de empleado a eliminar</label>
+    <input type="text" id="IdEliminarEmpleado" >    
+    <input type="button" id="btnEliminarEmpleado" value="Eliminar Datos">
+  </div>
+  <div data-role="footer">
+  <p>Derechos reservados</p>
+  </div>
+</div>    
+        
+        
+</body>
+</html>
